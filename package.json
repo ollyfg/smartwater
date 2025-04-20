@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "engines": {
-    "node": "22"
+    "node": "20"
   },
   "scripts": {
     "aider": "aider --model deepseek/deepseek-coder",
@@ -19,11 +19,12 @@
     "@sqlite.org/sqlite-wasm": "3.49.1-build4",
     "@typescript-eslint/eslint-plugin": "^8.30.1",
     "@typescript-eslint/parser": "^8.30.1",
-    "comlink": "^4.4.1",
+    "comlink": "^4.4.2",
     "eslint": "^9.25.0",
+    "firebase": "^11.6.0",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "vite-plugin-comlink": "^1.2.0"
+    "vite-plugin-comlink": "^5.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.1",
