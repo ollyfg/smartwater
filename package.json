@@ -17,6 +17,8 @@
   "license": "ISC",
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "3.49.1-build4",
+    "chart.js": "^4.4.1",
+    "react-chartjs-2": "^5.2.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^8.30.1",

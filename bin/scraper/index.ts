@@ -150,3 +150,118 @@ async function writeResults(tanks: any[]) {
   const tanks = await scrape();
   await writeResults(tanks);
 })();
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { comlink } from 'vite-plugin-comlink'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    comlink()
+  ],
+  worker: {
+    plugins: [comlink()]
+  },
+  optimizeDeps: {
+    exclude: ['@sqlite.org/sqlite-wasm']
+  }
+})
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './style.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)
+import { useState, useEffect } from 'react'
+import { initDB, getTanks, getRecentLevels } from './worker'
+import TankChart from './components/TankChart'
+
+export default function App() {
+  const [tanks, setTanks] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string|null>(null)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        await initDB()
+        const tankList = await getTanks()
+        setTanks(tankList)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>Error: {error}</div>
+
+  return (
+    <div className="app">
+      <h1>Water Tank Levels</h1>
+      <div className="charts">
+        {tanks.map(tank => (
+          <TankChart key={tank.id} tankId={tank.id} name={tank.name} />
+        ))}
+      </div>
+    </div>
+  )
+}
+import { useEffect, useState } from 'react'
+import { Line } from 'react-chartjs-2'
+import { getRecentLevels } from '../worker'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+)
+
+export default function TankChart({ tankId, name }: { tankId: number, name: string }) {
+  const [levels, setLevels] = useState<{date: string, level: number}[]>([])
+
+  useEffect(() => {
+    async function loadLevels() {
+      const data = await getRecentLevels(tankId, 30) // Last 30 days
+      setLevels(data)
+    }
+    loadLevels()
+  }, [tankId])
+
+  const chartData = {
+    labels: levels.map(l => l.date),
+    datasets: [{
+      label: `${name} Level`,
+      data: levels.map(l => l.level),
+      borderColor: 'rgb(75, 192, 192)',
+      tension: 0.1
+    }]
+  }
+
+  return (
+    <div className="chart-container">
+      <Line data={chartData} />
+    </div>
+  )
+}
