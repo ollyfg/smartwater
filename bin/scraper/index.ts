@@ -150,3 +150,128 @@ async function writeResults(tanks: any[]) {
   const tanks = await scrape();
   await writeResults(tanks);
 })();
+import { defineConfig } from 'vite'
+import { comlink } from 'vite-plugin-comlink'
+
+export default defineConfig({
+  plugins: [comlink()],
+  worker: {
+    plugins: [comlink()],
+  },
+})
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tank Levels</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
+import { initWorker } from './worker'
+import './style.css'
+
+const app = document.getElementById('app')!
+app.innerHTML = `
+  <h1>Tank Levels</h1>
+  <div class="loading">Loading...</div>
+  <div class="tank-list"></div>
+`
+
+async function main() {
+  const worker = await initWorker()
+  
+  try {
+    const tanks = await worker.getTanks()
+    const levels = await worker.getRecentLevels()
+    
+    const tankList = document.querySelector('.tank-list')!
+    tankList.innerHTML = tanks.map(tank => `
+      <div class="tank">
+        <h2>${tank.name}</h2>
+        <div class="level">Current: ${levels[tank.id]?.level || 'N/A'}%</div>
+      </div>
+    `).join('')
+    
+    document.querySelector('.loading')!.remove()
+  } catch (err) {
+    app.innerHTML = `<div class="error">Error loading tank data: ${err.message}</div>`
+  }
+}
+
+main()
+import { expose } from 'comlink'
+import sqlite3InitModule from '@sqlite.org/sqlite-wasm'
+
+interface Tank {
+  id: number
+  name: string
+}
+
+interface WaterLevel {
+  tank: number
+  level: number
+  timestamp: string
+}
+
+const worker = {
+  async initDB() {
+    const sqlite3 = await sqlite3InitModule({
+      locateFile: file => `https://sqlite.org/wasm/${file}`
+    })
+    
+    const db = new sqlite3.oo1.DB('/tanks.db', 'ct')
+    return db
+  },
+
+  async getTanks(): Promise<Tank[]> {
+    const db = await this.initDB()
+    return db.exec('SELECT id, name FROM tanks', { returnValue: 'resultRows' })
+  },
+
+  async getRecentLevels(): Promise<Record<number, WaterLevel>> {
+    const db = await this.initDB()
+    const levels = db.exec(`
+      SELECT tank, level, MAX(timestamp) as timestamp 
+      FROM water_levels 
+      GROUP BY tank
+    `, { returnValue: 'resultRows' })
+    
+    return levels.reduce((acc, level) => {
+      acc[level.tank] = level
+      return acc
+    }, {})
+  }
+}
+
+expose(worker)
+export type WorkerType = typeof worker
+export const initWorker = () => Comlink.wrap<WorkerType>(new Worker(new URL('./worker.ts', import.meta.url)))
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.tank {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+}
+
+.error {
+  color: #d32f2f;
+  padding: 1rem;
+  background: #ffebee;
+  border-radius: 4px;
+}

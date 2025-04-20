@@ -19,9 +19,11 @@
     "@sqlite.org/sqlite-wasm": "3.49.1-build4",
     "@typescript-eslint/eslint-plugin": "^8.30.1",
     "@typescript-eslint/parser": "^8.30.1",
+    "comlink": "^4.4.1",
     "eslint": "^9.25.0",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "vite-plugin-comlink": "^1.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.1",
