@@ -13,6 +13,17 @@ import sqlite3 from "sqlite3";
 import { Database, open } from "sqlite";
 import path from "path";
 
+const requiredEnvVars = [
+  "SMARTWATER_API_KEY",
+  "SMARTWATER_USERNAME",
+  "SMARTWATER_PASSWORD",
+];
+for (const varName of requiredEnvVars) {
+  if (!process.env[varName]) {
+    throw Error(`Missing required env var: ${varName}`);
+  }
+}
+
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.SMARTWATER_API_KEY!,
   databaseURL: "https://smartwater-app.firebaseio.com",
@@ -136,17 +147,6 @@ async function writeResults(tanks: any[]) {
 }
 
 (async () => {
-  const requiredEnvVars = [
-    "SMARTWATER_API_KEY",
-    "SMARTWATER_USERNAME",
-    "SMARTWATER_PASSWORD",
-  ];
-  for (const varName of requiredEnvVars) {
-    if (!process.env[varName]) {
-      throw Error(`Missing required env var: ${varName}`);
-    }
-  }
-
   const tanks = await scrape();
   await writeResults(tanks);
 })();
