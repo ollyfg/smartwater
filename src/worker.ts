@@ -7,45 +7,52 @@ interface Tank {
 }
 
 interface WaterLevel {
-  tank: number;
   level: number;
   timestamp: string;
 }
 
-const worker = {
-  async initDB() {
+let db: any = null;
+
+async function initDB() {
+  if (!db) {
     const sqlite3 = await sqlite3InitModule({
       locateFile: (file) => `https://sqlite.org/wasm/${file}`,
     });
+    db = new sqlite3.oo1.DB("/tanks.db", "ct");
+  }
+  return db;
+}
 
-    const db = new sqlite3.oo1.DB("/tanks.db", "ct");
-    return db;
-  },
+async function getTanks(): Promise<Tank[]> {
+  const db = await initDB();
+  return db.exec("SELECT id, name FROM tanks", { returnValue: "resultRows" });
+}
 
-  async getTanks(): Promise<Tank[]> {
-    const db = await this.initDB();
-    return db.exec("SELECT id, name FROM tanks", { returnValue: "resultRows" });
-  },
+async function getRecentLevels(tankId: number, days: number = 30): Promise<WaterLevel[]> {
+  const db = await initDB();
+  return db.exec(
+    `SELECT level, timestamp 
+     FROM water_levels 
+     WHERE tank = ? 
+     AND date(timestamp) >= date('now', ?) 
+     ORDER BY timestamp`,
+    [tankId, `-${days} days`],
+    { returnValue: "resultRows" }
+  );
+}
 
-  async getRecentLevels(): Promise<Record<number, WaterLevel>> {
-    const db = await this.initDB();
-    const levels = db.exec(
-      `
-      SELECT tank, level, MAX(timestamp) as timestamp 
-      FROM water_levels 
-      GROUP BY tank
-    `,
-      { returnValue: "resultRows" }
-    );
-
-    return levels.reduce((acc, level) => {
-      acc[level.tank] = level;
-      return acc;
-    }, {});
-  },
+const worker = {
+  initDB,
+  getTanks,
+  getRecentLevels
 };
 
 expose(worker);
 export type WorkerType = typeof worker;
-export const initWorker = () =>
-  wrap<WorkerType>(new Worker(new URL("./worker.ts", import.meta.url)));
+
+export const initWorker = () => {
+  const workerInstance = wrap<WorkerType>(new Worker(new URL("./worker.ts", import.meta.url)));
+  return workerInstance;
+};
+
+export { initDB, getTanks, getRecentLevels };
