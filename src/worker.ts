@@ -1,35 +1,27 @@
+import type { Tank, WaterLevel } from "./models";
 import { expose, wrap } from "comlink";
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
-
-interface Tank {
-  id: number;
-  name: string;
-}
-
-interface WaterLevel {
-  level: number;
-  timestamp: string;
-}
 
 let db: any = null;
 
 async function initDB() {
   if (!db) {
-    const sqlite3 = await sqlite3InitModule({
-      locateFile: (file) => `https://sqlite.org/wasm/${file}`,
-    });
-    db = new sqlite3.oo1.DB("/tanks.db", "ct");
+    const sqlite3 = await sqlite3InitModule({});
+    db = new sqlite3.oo1.DB("/tanks.db", "r");
   }
   return db;
 }
 
 async function getTanks(): Promise<Tank[]> {
-  const db = await initDB();
+  db = await initDB();
   return db.exec("SELECT id, name FROM tanks", { returnValue: "resultRows" });
 }
 
-async function getRecentLevels(tankId: number, days: number = 30): Promise<WaterLevel[]> {
-  const db = await initDB();
+async function getRecentLevels(
+  tankId: number,
+  days: number = 30
+): Promise<WaterLevel[]> {
+  db = await initDB();
   return db.exec(
     `SELECT level, timestamp 
      FROM water_levels 
@@ -44,14 +36,16 @@ async function getRecentLevels(tankId: number, days: number = 30): Promise<Water
 const worker = {
   initDB,
   getTanks,
-  getRecentLevels
+  getRecentLevels,
 };
 
 expose(worker);
 export type WorkerType = typeof worker;
 
 export const initWorker = () => {
-  const workerInstance = wrap<WorkerType>(new Worker(new URL("./worker.ts", import.meta.url)));
+  const workerInstance = wrap<WorkerType>(
+    new Worker(new URL("./worker.ts", import.meta.url))
+  );
   return workerInstance;
 };
 

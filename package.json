@@ -5,6 +5,7 @@
   "engines": {
     "node": "20"
   },
+  "type": "module",
   "scripts": {
     "aider": "aider --model deepseek/deepseek-coder",
     "scrape": "tsx bin/scraper/index.ts",
@@ -15,6 +16,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "main": "src/index",
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "3.49.1-build4",
     "chart.js": "^4.4.1",
