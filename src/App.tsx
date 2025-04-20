@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { initDB, getTanks, getRecentLevels } from "./worker";
+import { wrap } from "comlink";
+import type { TankWorkerType } from "./worker";
 import TankChart from "./components/TankChart";
 
 export default function App() {
@@ -11,8 +12,10 @@ export default function App() {
   useEffect(() => {
     async function loadData() {
       try {
-        await initDB();
-        const tankList = await getTanks();
+        const worker = wrap<TankWorkerType>(
+          new Worker(new URL("./worker.ts", import.meta.url))
+        );
+        const tankList = await worker.getTanks();
         setTanks(tankList);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");

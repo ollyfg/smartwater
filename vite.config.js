@@ -5,9 +5,8 @@ import { comlink } from "vite-plugin-comlink";
 export default defineConfig({
   plugins: [react(), comlink()],
   worker: {
-    plugins: () => {
-      return [comlink()];
-    },
+    format: "es",
+    plugins: () => [comlink()],
   },
   optimizeDeps: {
     exclude: ["@sqlite.org/sqlite-wasm"],
