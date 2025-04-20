@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
-import { getRecentLevels } from "../worker";
+import { wrap } from "comlink";
+import type { TankWorkerType } from "../worker";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -35,7 +36,10 @@ export default function TankChart({
 
   useEffect(() => {
     async function loadLevels() {
-      const data = await getRecentLevels(tankId, 30); // Last 30 days
+      const worker = wrap<TankWorkerType>(
+        new Worker(new URL("../worker.ts", import.meta.url))
+      );
+      const data = await worker.getRecentLevels(tankId, 30); // Last 30 days
       setLevels(data);
     }
     loadLevels();
