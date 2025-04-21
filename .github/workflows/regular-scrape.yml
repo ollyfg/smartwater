@@ -22,6 +22,10 @@ jobs:
         run: npm install
 
       - name: Run scraper
+        env:
+          SMARTWATER_USERNAME: ${{ secrets.SMARTWATER_USERNAME }}
+          SMARTWATER_PASSWORD: ${{ secrets.SMARTWATER_PASSWORD }}
+          SMARTWATER_API_KEY: ${{ secrets.SMARTWATER_API_KEY }}
         run: npm run scrape
 
       - name: Commit and push changes
@@ -30,4 +34,4 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add tanks.db
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: automated tanks.db update" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated tanks.db update" && git push)
