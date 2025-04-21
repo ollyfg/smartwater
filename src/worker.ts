@@ -1,40 +1,23 @@
-import type { Tank, WaterLevel } from "./models";
-import { expose } from "comlink";
-import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
+import sqlite3InitModule, { Database } from "@sqlite.org/sqlite-wasm";
 
-let db: any = null;
+const dbPromise: Promise<Database> = (async () => {
+  const sqlite3 = await sqlite3InitModule({});
+  return new sqlite3.oo1.DB("/tanks.db", "r");
+})();
 
-class TankWorker {
-  async initDB() {
-    if (!db) {
-      const sqlite3 = await sqlite3InitModule({});
-      db = new sqlite3.oo1.DB("/tanks.db", "r");
-    }
-    return db;
-  }
+export type Query = [number, string, (string | number)[]];
 
-  async getTanks(): Promise<Tank[]> {
-    await this.initDB();
-    return db.exec("SELECT id, name FROM tanks", { returnValue: "resultRows" });
-  }
-
-  async getRecentLevels(
-    tankId: number,
-    days: number = 30
-  ): Promise<WaterLevel[]> {
-    await this.initDB();
-    return db.exec(
-      `SELECT level, timestamp 
-       FROM water_levels 
-       WHERE tank = ? 
-       AND date(timestamp) >= date('now', ?) 
-       ORDER BY timestamp`,
-      [tankId, `-${days} days`],
-      { returnValue: "resultRows" }
-    );
-  }
-}
-
-const worker = new TankWorker();
-expose(worker);
-export type TankWorkerType = typeof worker;
+onmessage = async (e: MessageEvent<Query>) => {
+  const [id, query, params] = e.data;
+  const db = await dbPromise;
+  const result = db.exec({
+    sql: query,
+    bind: params,
+    returnValue: "resultRows",
+    rowMode: "object",
+  });
+  postMessage({
+    id,
+    result,
+  });
+};
