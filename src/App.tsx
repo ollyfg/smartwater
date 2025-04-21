@@ -1,38 +1,28 @@
 import React from "react";
 import { useState, useEffect } from "react";
-// import { TankWorkerType } from "./worker";
 import TankChart from "./components/TankChart";
+import { useWorker } from "./worker-context";
 
 export default function App() {
   const [tanks, setTanks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { query } = useWorker();
 
   useEffect(() => {
     async function loadData() {
       try {
-        console.log("Registering worker");
-        const myWorker = new Worker(new URL("worker.ts", import.meta.url));
-
-        const msg = [Math.random() * 10, Math.random() * 10];
-        myWorker.postMessage(msg);
-        console.log("Message posted to worker", msg);
-
-        myWorker.onmessage = (e) => {
-          console.log("Message received from worker", e.data);
-        };
-        // const tankList = await worker.getTanks();
-        // console.log("Got tanks", tankList);
-        // setTanks(tankList);
+        const tankList = await query("SELECT * FROM tanks");
+        setTanks(tankList);
       } catch (err) {
-        console.log("Failed to register worker", err);
+        console.log("Failed to load tanks", err);
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
       }
     }
     loadData();
-  }, []);
+  }, [query]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;

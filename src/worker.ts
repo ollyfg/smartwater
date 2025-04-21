@@ -5,19 +5,24 @@ const dbPromise: Promise<Database> = (async () => {
   return new sqlite3.oo1.DB("/tanks.db", "r");
 })();
 
-export type Query = [number, string, (string | number)[]];
+type QueryMessage = {
+  id: string;
+  sql: string;
+  params: (string | number)[];
+};
 
-onmessage = async (e: MessageEvent<Query>) => {
-  const [id, query, params] = e.data;
-  const db = await dbPromise;
-  const result = db.exec({
-    sql: query,
-    bind: params,
-    returnValue: "resultRows",
-    rowMode: "object",
-  });
-  postMessage({
-    id,
-    result,
-  });
+onmessage = async (e: MessageEvent<[string, string, (string | number)[]]>) => {
+  const [id, sql, params] = e.data;
+  try {
+    const db = await dbPromise;
+    const result = db.exec({
+      sql,
+      bind: params,
+      returnValue: "resultRows",
+      rowMode: "object",
+    });
+    postMessage({ id, result });
+  } catch (error) {
+    postMessage({ id, error: error instanceof Error ? error.message : "Unknown error" });
+  }
 };
