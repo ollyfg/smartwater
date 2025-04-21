@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
-import { wrap } from "comlink";
-import type { TankWorkerType } from "../worker";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,7 +11,8 @@ import {
   Legend,
 } from "chart.js";
 import React from "react";
-import { WaterLevel } from "../models";
+import { useSql } from "../contexts/sqlite";
+import { Tank, WaterLevel } from "../models";
 
 ChartJS.register(
   CategoryScale,
@@ -25,36 +24,42 @@ ChartJS.register(
   Legend
 );
 
-export default function TankChart({
-  tankId,
-  name,
-}: {
-  tankId: number;
-  name: string;
-}) {
-  const [levels, setLevels] = useState<WaterLevel[]>([]);
+export default function TankChart() {
+  const [tanks, setTanks] = useState<Tank[]>([]);
+  const [levels, setLevels] = useState<Record<number, WaterLevel[]>>({});
+  const { query, workerReady } = useSql();
 
   useEffect(() => {
-    async function loadLevels() {
-      const worker = wrap<TankWorkerType>(
-        new Worker(new URL("../worker.ts", import.meta.url))
-      );
-      const data = await worker.getRecentLevels(tankId, 30); // Last 30 days
-      setLevels(data);
+    async function loadData() {
+      if (workerReady) {
+        const [allLevels, tanks] = await Promise.all([
+          query<WaterLevel>("SELECT * FROM water_levels ORDER BY date"),
+          query<Tank>("SELECT * FROM tanks"),
+        ]);
+
+        setTanks(tanks);
+        const levels = tanks.reduce((agg, x) => {
+          agg[x.id] = allLevels.filter((y) => y.tank === x.id);
+          return agg;
+        }, {});
+        setLevels(levels);
+      }
     }
-    loadLevels();
-  }, [tankId]);
+    loadData();
+  }, [workerReady]);
+
+  if (!Object.values(levels).length) {
+    return <></>;
+  }
 
   const chartData = {
-    labels: levels.map((l) => l.date),
-    datasets: [
-      {
-        label: `${name} Level`,
-        data: levels.map((l) => l.level),
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0.1,
-      },
-    ],
+    labels: Object.values(levels)[0].map((l) => l.date),
+    datasets: tanks.map((tank) => ({
+      label: tank.name,
+      data: levels[tank.id].map((l) => l.level),
+      borderColor: "rgb(75, 192, 192)",
+      tension: 0.1,
+    })),
   };
 
   return (

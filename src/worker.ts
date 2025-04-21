@@ -1,18 +1,42 @@
-import sqlite3InitModule, { Database } from "@sqlite.org/sqlite-wasm";
+import sqlite3InitModule, { OpfsDatabase } from "@sqlite.org/sqlite-wasm";
 
-const dbPromise: Promise<Database> = (async () => {
-  const sqlite3 = await sqlite3InitModule({});
-  return new sqlite3.oo1.DB("/tanks.db", "r");
+/** A promise that resolves to the DB file as a buffer */
+const filePromise: Promise<ArrayBuffer> = (async () => {
+  const reaponse = await fetch("/tanks.db");
+  const file = await reaponse.arrayBuffer();
+  return file;
 })();
 
-type QueryMessage = {
+/** A promise that resolves to a hydrated DB */
+const dbPromise: Promise<OpfsDatabase> = (async () => {
+  const [sqlite3, file] = await Promise.all([
+    sqlite3InitModule({}),
+    filePromise,
+  ]);
+  // Import the file into OPFS
+  await sqlite3.oo1.OpfsDb.importDb("tanks.db", file);
+  // Open the file (Set flags to "rb" to debug)
+  return new sqlite3.oo1.OpfsDb("tanks.db", "r");
+})();
+
+export type QueryMessage = {
   id: string;
   sql: string;
   params: (string | number)[];
 };
 
-onmessage = async (e: MessageEvent<[string, string, (string | number)[]]>) => {
-  const [id, sql, params] = e.data;
+export type QueryResult =
+  | {
+      id: number;
+      result: Record<string, any>[];
+    }
+  | {
+      id: number;
+      error: string;
+    };
+
+onmessage = async (e: MessageEvent<QueryMessage>) => {
+  const { id, sql, params } = e.data;
   try {
     const db = await dbPromise;
     const result = db.exec({
@@ -23,6 +47,10 @@ onmessage = async (e: MessageEvent<[string, string, (string | number)[]]>) => {
     });
     postMessage({ id, result });
   } catch (error) {
-    postMessage({ id, error: error instanceof Error ? error.message : "Unknown error" });
+    console.error("Error while querying", error);
+    postMessage({
+      id,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 };
