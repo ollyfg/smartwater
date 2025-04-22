@@ -2,8 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  base: '/smartwater/',
+  base: "/smartwater/",
   plugins: [react()],
+  build: {
+    minify: false,
+  },
   worker: {
     format: "es",
   },

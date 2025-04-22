@@ -13,6 +13,8 @@ const dbPromise: Promise<OpfsDatabase> = (async () => {
     sqlite3InitModule({}),
     filePromise,
   ]);
+  globalThis.sqlite3 = sqlite3;
+  globalThis.file = file;
   // Import the file into OPFS
   await sqlite3.oo1.OpfsDb.importDb("tanks.db", file);
   // Open the file (Set flags to "r" to debug)
