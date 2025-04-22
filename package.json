@@ -17,6 +17,7 @@
   "author": "",
   "license": "ISC",
   "main": "src/main",
+  "packageManager": "pnpm@9.15.9",
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "3.49.1-build4",
     "@types/lodash-es": "^4.17.12",

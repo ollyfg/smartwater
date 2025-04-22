@@ -25,9 +25,12 @@ export function SqlProvider({ children }: { children: React.ReactNode }) {
   const idCounter = useRef(0);
 
   useEffect(() => {
-    const workerInstance = new Worker(new URL("./worker.ts", import.meta.url), {
-      type: "module",
-    });
+    const workerInstance = new Worker(
+      new URL("../worker.ts", import.meta.url),
+      {
+        type: "module",
+      }
+    );
     setWorker(workerInstance);
 
     return () => {
