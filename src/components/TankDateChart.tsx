@@ -43,13 +43,13 @@ export default function TankDateChart() {
     async function loadData() {
       if (workerReady) {
         // Query just the days we want to show
-        let levelQuery = "SELECT * FROM water_levels ORDER BY date DESC";
+        let levelQuery = "SELECT * FROM water_levels ORDER BY date ASC";
         let levelParams: (string | number)[] = [];
         if (Number.isFinite(daysToShow)) {
           levelQuery =
             "SELECT * FROM water_levels WHERE date > ? ORDER BY date";
           levelParams = [
-            startOfDay(subDays(new Date(), daysToShow)).toUTCString(),
+            startOfDay(subDays(new Date(), daysToShow)).toISOString(),
           ];
         }
 

@@ -15,7 +15,7 @@ const dbPromise: Promise<OpfsDatabase> = (async () => {
   ]);
   // Import the file into OPFS
   await sqlite3.oo1.OpfsDb.importDb("tanks.db", file);
-  // Open the file (Set flags to "rb" to debug)
+  // Open the file (Set flags to "r" to debug)
   return new sqlite3.oo1.OpfsDb("tanks.db", "r");
 })();
 

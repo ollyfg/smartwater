@@ -1,7 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { useSql } from "./contexts/sqlite";
-import TankChart from "./components/TankChart";
+import TankDateChart from "./components/TankDateChart";
 
 export default function App() {
   const [tanks, setTanks] = useState<any[]>([]);
@@ -33,7 +33,7 @@ export default function App() {
     <div className="app">
       <h1>Water Tank Levels</h1>
       <div className="charts">
-        <TankChart />
+        <TankDateChart />
       </div>
     </div>
   );
