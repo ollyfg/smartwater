@@ -135,10 +135,11 @@ async function writeResults(tanks: any[]) {
       // Insert the current water level
       await db.run(
         `INSERT INTO water_levels (tank, level, date)
-          VALUES (:tank, :level, datetime('now'))`,
+          VALUES (:tank, :level, :date)`,
         {
           ":tank": tank.serialNumber,
           ":level": tank.waterLevel,
+          ":date": new Date().toISOString(),
         }
       );
     }
