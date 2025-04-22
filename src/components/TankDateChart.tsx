@@ -18,7 +18,7 @@ import React from "react";
 import { useSql } from "../contexts/sqlite";
 import { Tank, WaterLevel } from "../models";
 import { uniqBy } from "lodash-es";
-import { startOfDay } from "date-fns";
+import { startOfDay, subDays } from "date-fns";
 
 ChartJS.register(
   CategoryScale,
@@ -31,16 +31,30 @@ ChartJS.register(
   Legend
 );
 
-export default function TankChart() {
+const DATE_OPTIONS = [30, 90, 365, Infinity];
+
+export default function TankDateChart() {
   const [tanks, setTanks] = useState<Tank[]>([]);
   const [levels, setLevels] = useState<Record<number, WaterLevel[]>>({});
+  const [daysToShow, setDays] = useState(DATE_OPTIONS[0]);
   const { query, workerReady } = useSql();
 
   useEffect(() => {
     async function loadData() {
       if (workerReady) {
+        // Query just the days we want to show
+        let levelQuery = "SELECT * FROM water_levels ORDER BY date DESC";
+        let levelParams: (string | number)[] = [];
+        if (Number.isFinite(daysToShow)) {
+          levelQuery =
+            "SELECT * FROM water_levels WHERE date > ? ORDER BY date";
+          levelParams = [
+            startOfDay(subDays(new Date(), daysToShow)).toUTCString(),
+          ];
+        }
+
         const [allLevels, tanks] = await Promise.all([
-          query<WaterLevel>("SELECT * FROM water_levels ORDER BY date"),
+          query<WaterLevel>(levelQuery, levelParams),
           query<Tank>("SELECT * FROM tanks"),
         ]);
 
@@ -53,7 +67,7 @@ export default function TankChart() {
       }
     }
     loadData();
-  }, [workerReady]);
+  }, [workerReady, daysToShow]);
 
   if (!Object.values(levels).length) {
     return <></>;
