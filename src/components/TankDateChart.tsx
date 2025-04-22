@@ -151,6 +151,19 @@ export default function TankDateChart() {
 
   return (
     <div className="chart-container">
+      <div className="chart-controls">
+        <select
+          className="date-selector"
+          value={daysToShow}
+          onChange={(e) => setDays(Number(e.target.value))}
+        >
+          {DATE_OPTIONS.map((days) => (
+            <option key={days} value={days}>
+              {Number.isFinite(days) ? `Last ${days} days` : "All time"}
+            </option>
+          ))}
+        </select>
+      </div>
       <Line data={chartData} options={chartOptions} />
     </div>
   );
