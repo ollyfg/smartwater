@@ -13,7 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false # Important for pushing changes
           ref: ${{ github.head_ref }}
 
       - name: Setup Node.js
