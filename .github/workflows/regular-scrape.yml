@@ -14,6 +14,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false # Important for pushing changes
+          ref: ${{ github.head_ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -30,10 +31,6 @@ jobs:
           SMARTWATER_API_KEY: ${{ secrets.SMARTWATER_API_KEY }}
         run: npm run scrape
 
-      - name: Commit and push changes
-        if: github.ref == 'refs/heads/master' # Only push if on master branch
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "ollyfg@users.noreply.github.com"
-          git add public/tanks.db
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated tanks.db update" && git push)
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Automated tanks.db update
