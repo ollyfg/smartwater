@@ -4,19 +4,26 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  TimeScale,
   PointElement,
   LineElement,
   Title,
   Tooltip,
   Legend,
+  ChartData,
+  ChartOptions,
 } from "chart.js";
+import "chartjs-adapter-date-fns";
 import React from "react";
 import { useSql } from "../contexts/sqlite";
 import { Tank, WaterLevel } from "../models";
+import { uniqBy } from "lodash-es";
+import { startOfDay } from "date-fns";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  TimeScale,
   PointElement,
   LineElement,
   Title,
@@ -54,31 +61,83 @@ export default function TankChart() {
 
   // Color palette for tanks
   const tankColors = [
-    "rgb(75, 192, 192)",  // teal
-    "rgb(255, 99, 132)",  // red
-    "rgb(54, 162, 235)",  // blue
-    "rgb(255, 206, 86)",  // yellow
+    "rgb(75, 192, 192)", // teal
+    "rgb(255, 99, 132)", // red
+    "rgb(54, 162, 235)", // blue
+    "rgb(255, 206, 86)", // yellow
     "rgb(153, 102, 255)", // purple
-    "rgb(255, 159, 64)",  // orange
+    "rgb(255, 159, 64)", // orange
     "rgb(199, 199, 199)", // gray
   ];
 
-  const chartData = {
-    labels: Object.values(levels)[0].map((l) => l.date),
+  // Labels
+  const labels = uniqBy(
+    Object.values(levels).flatMap((x) => x.map((y) => y.date)),
+    (date) => startOfDay(date)
+  );
+
+  const chartData: ChartData<"line", { x: string; y: number }[], string> = {
+    labels,
     datasets: tanks.map((tank, index) => ({
       label: tank.name,
-      data: levels[tank.id].map((l) => l.level),
+      data: levels[tank.id].map((l) => ({
+        x: l.date,
+        y: l.level / 100,
+      })),
       borderColor: tankColors[index % tankColors.length],
-      backgroundColor: tankColors[index % tankColors.length] + "40", // Add transparency
+      backgroundColor: tankColors[index % tankColors.length],
       borderWidth: 2,
       pointRadius: 3,
       tension: 0.1,
+      indexAxis: "x",
     })),
+  };
+
+  const chartOptions: ChartOptions<"line"> = {
+    scales: {
+      y: {
+        type: "linear",
+        beginAtZero: true,
+        max: 1,
+        ticks: {
+          autoSkip: true,
+          stepSize: 0.01,
+          format: {
+            style: "percent",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          },
+        },
+      },
+      x: {
+        type: "time",
+        ticks: {
+          source: "auto",
+        },
+        time: {
+          round: "day",
+          minUnit: "hour",
+        },
+      },
+    },
+    interaction: {
+      mode: "nearest",
+    },
+    plugins: {
+      decimation: {
+        enabled: true,
+        algorithm: "min-max",
+      },
+      legend: {
+        display: true,
+        position: "bottom",
+      },
+    },
   };
 
   return (
     <div className="chart-container">
-      <Line data={chartData} />
+      <Line data={chartData} options={chartOptions} />
     </div>
   );
 }
