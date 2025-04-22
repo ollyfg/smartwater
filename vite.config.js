@@ -4,9 +4,6 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   base: "/smartwater/",
   plugins: [react()],
-  build: {
-    minify: false,
-  },
   worker: {
     format: "es",
   },
