@@ -110,6 +110,7 @@ export default function TankDateChart() {
   const chartOptions: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
+    devicePixelRatio: window.devicePixelRatio * 2,
     scales: {
       y: {
         type: "linear",
@@ -167,7 +168,7 @@ export default function TankDateChart() {
           ))}
         </select>
       </div>
-      <div style={{ position: 'relative', height: '400px', width: '100%' }}>
+      <div style={{ position: "relative", height: "400px", width: "100%" }}>
         <Line data={chartData} options={chartOptions} />
       </div>
     </div>
