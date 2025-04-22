@@ -108,6 +108,8 @@ export default function TankDateChart() {
   };
 
   const chartOptions: ChartOptions<"line"> = {
+    responsive: true,
+    maintainAspectRatio: false,
     scales: {
       y: {
         type: "linear",
@@ -156,6 +158,7 @@ export default function TankDateChart() {
           className="date-selector"
           value={daysToShow}
           onChange={(e) => setDays(Number(e.target.value))}
+          aria-label="Select date range"
         >
           {DATE_OPTIONS.map((days) => (
             <option key={days} value={days}>
@@ -164,7 +167,9 @@ export default function TankDateChart() {
           ))}
         </select>
       </div>
-      <Line data={chartData} options={chartOptions} />
+      <div style={{ position: 'relative', height: '400px', width: '100%' }}>
+        <Line data={chartData} options={chartOptions} />
+      </div>
     </div>
   );
 }
