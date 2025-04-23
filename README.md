@@ -53,17 +53,20 @@ pnpm preview
 The project includes an automated scraper that collects water level data from SmartWater devices and stores it in a local SQLite database.
 
 #### Requirements
+
 - Firebase credentials (stored as environment variables):
   - `SMARTWATER_API_KEY` - Firebase API key
   - `SMARTWATER_USERNAME` - SmartWater account email
   - `SMARTWATER_PASSWORD` - SmartWater account password
 
 #### Running the Scraper
+
 ```bash
 pnpm scrape
 ```
 
 #### What It Does
+
 1. Authenticates with SmartWater's Firebase backend
 2. Fetches current water levels for all connected tanks
 3. Stores the data in `public/tanks.db` with:
@@ -75,21 +78,28 @@ pnpm scrape
    - Historical data preservation
 
 #### Scheduled Collection
+
 For regular automated collection:
+
 1. Set up a cron job or scheduled task to run:
+
 ```bash
 cd /path/to/project && pnpm scrape
 ```
-2. Recommended frequency: Every 1-4 hours depending on your needs
+
+2. Recommended frequency: Every 6 hours.
 
 #### Data Structure
+
 The SQLite database contains two tables:
+
 - `tanks` - Tank metadata (id, name)
 - `water_levels` - Historical readings (tank_id, level%, timestamp)
 
 Example query to view recent data:
+
 ```sql
-SELECT t.name, w.level, w.date 
+SELECT t.name, w.level, w.date
 FROM water_levels w
 JOIN tanks t ON w.tank = t.id
 ORDER BY w.date DESC
