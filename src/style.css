@@ -27,26 +27,27 @@ body {
 .chart-controls {
   margin-bottom: 1.5rem;
   display: flex;
-  justify-content: flex-end;
+  gap: 0.5em;
+  justify-content: flex-start;
 }
 
-.date-selector {
+select {
   padding: 0.5rem 1rem;
   border-radius: 6px;
   border: 1px solid #e0e0e0;
   background-color: white;
   font-size: 0.9rem;
   color: #333;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
-.date-selector:hover {
+select:hover {
   border-color: #bdbdbd;
 }
 
-.date-selector:focus {
+select:focus {
   outline: none;
   border-color: #1976d2;
   box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
@@ -56,24 +57,37 @@ body {
   background: white;
   border-radius: 8px;
   padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   width: 100%;
   overflow: hidden;
   position: relative;
+}
+
+.chart-wrapper {
+  position: relative;
+  min-height: 400px;
+  width: 100%;
+}
+
+.spacer {
+  flex-grow: 5;
 }
 
 @media (max-width: 768px) {
   .chart-container {
     padding: 0.5rem;
   }
-  
+
   .chart-controls {
-    justify-content: center;
     margin-bottom: 1rem;
   }
-  
-  .date-selector {
+
+  .select {
     width: 100%;
     max-width: 200px;
+  }
+
+  .chart-wrapper {
+    height: 100%;
   }
 }

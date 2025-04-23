@@ -16,8 +16,20 @@ import {
 import "chartjs-adapter-date-fns";
 import React from "react";
 import { useSql } from "../contexts/sqlite";
-import { COLORS, Tank, WaterLevel } from "../models";
-import { daysToWeeks, startOfDay, subDays } from "date-fns";
+import { COLORS, MONTHS, Tank, WaterLevel } from "../models";
+import { groupBy, uniqBy } from "lodash-es";
+import {
+  addDays,
+  addMonths,
+  daysToWeeks,
+  endOfYear,
+  formatDate,
+  getDayOfYear,
+  getMonth,
+  startOfDay,
+  startOfYear,
+  subDays,
+} from "date-fns";
 
 ChartJS.register(
   CategoryScale,
@@ -30,49 +42,50 @@ ChartJS.register(
   Legend
 );
 
-type TankDateChartProps = {
-  days: number;
-  tanks: Tank[];
-};
+type TankCompareChartProps = { tankId: number };
 
-export default function TankDateChart({ days, tanks }: TankDateChartProps) {
-  const [levels, setLevels] = useState<Record<number, WaterLevel[]>>({});
+/**
+ * Render a graph of the year, with previous years overlayed
+ */
+export default function TankCompareChart({ tankId }: TankCompareChartProps) {
+  const [levels, setLevels] = useState<Record<string, WaterLevel[]>>({});
   const { query, workerReady } = useSql();
 
   useEffect(() => {
     async function loadData() {
       if (workerReady) {
-        // Query just the days we want to show
-        let levelQuery = "SELECT * FROM water_levels ORDER BY date ASC";
-        let levelParams: (string | number)[] = [];
-        if (Number.isFinite(daysToWeeks)) {
-          levelQuery =
-            "SELECT * FROM water_levels WHERE date > ? ORDER BY date ASC";
-          levelParams = [startOfDay(subDays(new Date(), days)).toISOString()];
-        }
+        // Query levels for the tank we want to show
+        const allLevels = await query<WaterLevel>(
+          "SELECT * FROM water_levels WHERE tank = ? ORDER BY date ASC",
+          [tankId]
+        );
 
-        const allLevels = await query<WaterLevel>(levelQuery, levelParams);
-
-        const levels = tanks.reduce((agg, x) => {
-          agg[x.id] = allLevels.filter((y) => y.tank === x.id);
-          return agg;
-        }, {});
+        const levels = groupBy(allLevels, (level) => startOfYear(level.date));
         setLevels(levels);
       }
     }
     loadData();
-  }, [workerReady, days]);
+  }, [workerReady, tankId]);
 
   const numberOfDatasets = Object.values(levels).length;
   if (numberOfDatasets === 0) {
     return <></>;
   }
 
-  const chartData: ChartData<"line", { x: string; y: number }[], string> = {
-    datasets: tanks.map((tank, index) => ({
-      label: tank.name,
-      data: levels[tank.id].map((l) => ({
-        x: l.date,
+  const jan1st = startOfYear(new Date());
+  const dec31st = endOfYear(new Date());
+
+  const labels = [];
+  for (let i = 0; i < 12; i++) {
+    labels.push(addMonths(jan1st, i));
+  }
+
+  const chartData: ChartData<"line", { x: Date; y: number }[], string> = {
+    labels,
+    datasets: Object.entries(levels).map(([start, points], index) => ({
+      label: formatDate(start, "yyyy"),
+      data: points.map((l) => ({
+        x: addDays(jan1st, getDayOfYear(l.date)),
         y: l.level / 100,
       })),
       borderColor: COLORS[index % COLORS.length],
@@ -105,12 +118,14 @@ export default function TankDateChart({ days, tanks }: TankDateChartProps) {
       },
       x: {
         type: "time",
+        min: jan1st.toISOString(),
+        max: dec31st.toISOString(),
         ticks: {
-          source: "auto",
-        },
-        time: {
-          round: "hour",
-          minUnit: "hour",
+          source: "labels",
+          callback: (value) => {
+            const month = getMonth(value);
+            return MONTHS[month];
+          },
         },
       },
     },
@@ -123,14 +138,14 @@ export default function TankDateChart({ days, tanks }: TankDateChartProps) {
         algorithm: "min-max",
       },
       legend: {
-        display: numberOfDatasets > 1,
+        display: true,
         position: "bottom",
       },
     },
   };
 
   return (
-    <div className="chart-wrapper">
+    <div style={{ position: "relative", height: "400px", width: "100%" }}>
       <Line data={chartData} options={chartOptions} />
     </div>
   );
