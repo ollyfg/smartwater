@@ -132,7 +132,7 @@ export default function TankDateChart() {
           source: "auto",
         },
         time: {
-          round: "day",
+          round: "hour",
           minUnit: "hour",
         },
       },
