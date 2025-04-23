@@ -141,6 +141,22 @@ export default function TankCompareChart({ tankId }: TankCompareChartProps) {
         display: true,
         position: "bottom",
       },
+      tooltip: {
+        enabled: true,
+        mode: "x",
+        filter: (item, _i, items) => {
+          const firstItemInDataset = items.find(
+            (x) => x.datasetIndex === item.datasetIndex
+          );
+          return item === firstItemInDataset;
+        },
+        callbacks: {
+          title: (item) => {
+            const date = item[0].parsed.x;
+            return formatDate(date, "do MMM h:mmaaa");
+          },
+        },
+      },
     },
   };
 

@@ -17,7 +17,7 @@ import "chartjs-adapter-date-fns";
 import React from "react";
 import { useSql } from "../contexts/sqlite";
 import { COLORS, Tank, WaterLevel } from "../models";
-import { daysToWeeks, startOfDay, subDays } from "date-fns";
+import { daysToWeeks, formatDate, startOfDay, subDays } from "date-fns";
 
 ChartJS.register(
   CategoryScale,
@@ -125,6 +125,16 @@ export default function TankDateChart({ days, tanks }: TankDateChartProps) {
       legend: {
         display: numberOfDatasets > 1,
         position: "bottom",
+      },
+      tooltip: {
+        enabled: true,
+        mode: "x",
+        callbacks: {
+          title: (item) => {
+            const date = item[0].parsed.x;
+            return formatDate(date, "do MMM y h:mmaaa");
+          },
+        },
       },
     },
   };
