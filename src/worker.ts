@@ -3,7 +3,7 @@ import sqlite3InitModule, { OpfsDatabase } from "@sqlite.org/sqlite-wasm";
 /** A promise that resolves to the DB file as a buffer */
 const filePromise: Promise<ArrayBuffer> = (async () => {
   const response = await fetch(
-    `https://github.com/ollyfg/smartwater/raw/refs/heads/master/public/tanks.db`
+    `/smartwater/tanks.db?v=${new Date().getTime()}`
   );
   const file = await response.arrayBuffer();
   return file;
