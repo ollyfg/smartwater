@@ -18,7 +18,7 @@ export type WaterLevel = {
 /** The types of chart we can show */
 export const CHART_TYPE_DESCRIPTIONS = {
   DATE: "Date View",
-  COMPARE: "Compare to last year",
+  COMPARE: "Compare years",
 } as const;
 export type CHART_TYPE = keyof typeof CHART_TYPE_DESCRIPTIONS;
 export const CHART_TYPES = Object.keys(CHART_TYPE_DESCRIPTIONS) as CHART_TYPE[];
