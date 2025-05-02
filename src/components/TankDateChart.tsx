@@ -88,6 +88,11 @@ export default function TankDateChart({ days, tanks }: TankDateChartProps) {
     responsive: true,
     maintainAspectRatio: false,
     devicePixelRatio: window.devicePixelRatio * 2,
+    elements: {
+      point: {
+        pointStyle: false,
+      },
+    },
     scales: {
       y: {
         type: "linear",

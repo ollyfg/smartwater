@@ -101,6 +101,11 @@ export default function TankCompareChart({ tankId }: TankCompareChartProps) {
     responsive: true,
     maintainAspectRatio: false,
     devicePixelRatio: window.devicePixelRatio * 2,
+    elements: {
+      point: {
+        pointStyle: false,
+      },
+    },
     scales: {
       y: {
         type: "linear",
