@@ -17,7 +17,7 @@ import "chartjs-adapter-date-fns";
 import React from "react";
 import { useSql } from "../contexts/sqlite";
 import { COLORS, Tank, WaterLevel } from "../models";
-import { daysToWeeks, formatDate, startOfDay, subDays } from "date-fns";
+import { formatDate, startOfDay, subDays } from "date-fns";
 
 ChartJS.register(
   CategoryScale,
@@ -40,12 +40,16 @@ export default function TankDateChart({ days, tanks }: TankDateChartProps) {
   const { query, workerReady } = useSql();
 
   useEffect(() => {
+    console.log("Days changed", days);
+  }, [days]);
+
+  useEffect(() => {
     async function loadData() {
       if (workerReady) {
         // Query just the days we want to show
         let levelQuery = "SELECT * FROM water_levels ORDER BY date ASC";
         let levelParams: (string | number)[] = [];
-        if (Number.isFinite(daysToWeeks)) {
+        if (Number.isFinite(days)) {
           levelQuery =
             "SELECT * FROM water_levels WHERE date > ? ORDER BY date ASC";
           levelParams = [startOfDay(subDays(new Date(), days)).toISOString()];
